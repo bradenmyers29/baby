@@ -1,0 +1,63 @@
+---
+title: "Popularity of the Name Braden"
+format: html
+execute:
+  echo: false
+---
+
+```{r}
+#| label: setup
+#| message: false
+library(tidyverse)
+library(plotly)
+library(scales)
+```
+
+```{r}
+#| label: plot-braden
+#| message: false
+files <- list.files("data", pattern = "^yob.*\\.txt$", full.names = TRUE)
+
+baby_names <- read_csv(
+  files,
+  id = "file",
+  col_names = c("name", "sex", "count"),
+  show_col_types = FALSE
+) |>
+  mutate(year = parse_number(basename(file))) |>
+  select(year, sex, name, count)
+
+# Filter for Braden over the last 100 years and format labels
+braden <- baby_names |>
+  filter(name == "Braden", year >= 1924) |>
+  mutate(sex_label = if_else(sex == "M", "Male", "Female"))
+
+p <- ggplot(braden, aes(
+    x = year,
+    y = count,
+    color = sex_label,
+    fill = sex_label,
+    group = sex_label,
+    text = paste0(
+      "<b>Year:</b> ", year, "<br>",
+      "<b>Sex:</b> ", sex_label, "<br>",
+      "<b>Babies:</b> ", comma(count)
+    )
+  )) +
+  geom_area(alpha = 0.25, position = "identity") +
+  geom_line(linewidth = 0.8) +
+  geom_point(size = 1.2, alpha = 0.8) +
+  scale_color_manual(values = c("Female" = "#e7298a", "Male" = "#2b8cbe")) +
+  scale_fill_manual(values = c("Female" = "#e7298a", "Male" = "#2b8cbe")) +
+  scale_y_continuous(labels = comma) +
+  labs(
+    title = "Popularity of the Name 'Braden' (1924–2023)",
+    x = "Year",
+    y = "Number of Babies",
+    color = "Sex",
+    fill = "Sex"
+  ) +
+  theme_minimal(base_size = 12)
+
+ggplotly(p, tooltip = "text")
+```
