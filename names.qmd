@@ -59,5 +59,22 @@ p <- ggplot(braden, aes(
   ) +
   theme_minimal(base_size = 12)
 
-ggplotly(p, tooltip = "text")
+ggplotly(p, tooltip = "text") |>
+  add_annotations(
+    x = 2008,
+    y = 2524,
+    text = "I was born here",
+    showarrow = TRUE,
+    arrowhead = 2,
+    arrowsize = 1,
+    arrowwidth = 1.5,
+    arrowcolor = "#e41a1c",
+    ax = 50,
+    ay = -40,
+    font = list(size = 12, color = "#222222"),
+    bgcolor = "rgba(255, 255, 255, 0.85)",
+    bordercolor = "#cccccc",
+    borderwidth = 1,
+    borderpad = 4
+  )
 ```
