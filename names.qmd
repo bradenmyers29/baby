@@ -13,6 +13,53 @@ library(plotly)
 library(scales)
 ```
 
+## Compare Any Name to "Braden"
+
+```{ojs}
+//| echo: false
+data = FileAttachment("data/comparison_names.csv").csv({ typed: true })
+
+viewof searchName = Inputs.text({
+  label: "Search a name to compare:",
+  value: "Brandon",
+  placeholder: "Type a name (e.g., Brandon, Brayden, Liam, Emma, Noah)..."
+})
+
+cleaned = searchName.trim().toLowerCase()
+displayName = searchName.trim() ? searchName.trim().charAt(0).toUpperCase() + searchName.trim().slice(1).toLowerCase() : "Comparison"
+
+filtered = data.filter(d => 
+  d.name.toLowerCase() === cleaned || 
+  d.name === "Braden"
+)
+
+Plot.plot({
+  title: `Popularity Comparison: "${displayName}" vs. "Braden" (1924–2023)`,
+  y: { grid: true, label: "Total Births" },
+  x: { tickFormat: "d", label: "Year" },
+  color: { 
+    legend: true,
+    domain: ["Braden", displayName],
+    range: ["#0284c7", "#ec4899"]
+  },
+  marks: [
+    Plot.lineY(filtered, {
+      x: "year", 
+      y: "count", 
+      stroke: d => d.name === "Braden" ? "Braden" : displayName, 
+      strokeWidth: 2.5
+    }),
+    Plot.tip(filtered, Plot.pointerX({
+      x: "year", 
+      y: "count", 
+      title: d => `${d.name} (${d.year}): ${d.count.toLocaleString()} births`
+    }))
+  ]
+})
+```
+
+## "Braden" Deep Dive
+
 ```{r}
 #| label: plot-braden
 #| message: false
@@ -27,12 +74,13 @@ baby_names <- read_csv(
   mutate(year = parse_number(basename(file))) |>
   select(year, sex, name, count)
 
+
 # Filter for Braden over the last 100 years and format labels
 braden <- baby_names |>
   filter(name == "Braden", year >= 1924) |>
   mutate(sex_label = if_else(sex == "M", "Male", "Female"))
 
-p <- ggplot(braden, aes(
+p1 <- ggplot(braden, aes(
     x = year,
     y = count,
     color = sex_label,
@@ -45,11 +93,12 @@ p <- ggplot(braden, aes(
     )
   )) +
   geom_area(alpha = 0.25, position = "identity") +
-  geom_line(linewidth = 0.8) +
-  geom_point(size = 1.2, alpha = 0.8) +
-  scale_color_manual(values = c("Female" = "#e7298a", "Male" = "#2b8cbe")) +
-  scale_fill_manual(values = c("Female" = "#e7298a", "Male" = "#2b8cbe")) +
+  geom_line(linewidth = 0.9) +
+  geom_point(size = 1.3, alpha = 0.8) +
+  scale_color_manual(values = c("Female" = "#ec4899", "Male" = "#0284c7")) +
+  scale_fill_manual(values = c("Female" = "#ec4899", "Male" = "#0284c7")) +
   scale_y_continuous(labels = comma) +
+  scale_x_continuous(breaks = seq(1930, 2020, by = 10)) +
   labs(
     title = "Popularity of the Name 'Braden' (1924–2023)",
     x = "Year",
@@ -59,7 +108,7 @@ p <- ggplot(braden, aes(
   ) +
   theme_minimal(base_size = 12)
 
-ggplotly(p, tooltip = "text") |>
+ggplotly(p1, tooltip = "text") |>
   add_annotations(
     x = 2008,
     y = 2524,
@@ -68,13 +117,74 @@ ggplotly(p, tooltip = "text") |>
     arrowhead = 2,
     arrowsize = 1,
     arrowwidth = 1.5,
-    arrowcolor = "#e41a1c",
-    ax = 50,
+    arrowcolor = "#ef4444",
+    ax = 45,
     ay = -40,
-    font = list(size = 12, color = "#222222"),
-    bgcolor = "rgba(255, 255, 255, 0.85)",
-    bordercolor = "#cccccc",
+    font = list(size = 12, color = "#1e293b"),
+    bgcolor = "rgba(255, 255, 255, 0.9)",
+    bordercolor = "#cbd5e1",
     borderwidth = 1,
     borderpad = 4
   )
+```
+
+```{r}
+#| label: hist-braden
+#| message: false
+p2 <- ggplot(braden, aes(
+    x = year,
+    y = count,
+    fill = sex_label,
+    text = paste0(
+      "<b>Year:</b> ", year, "<br>",
+      "<b>Sex:</b> ", sex_label, "<br>",
+      "<b>Births:</b> ", comma(count)
+    )
+  )) +
+  geom_col(position = "stack", width = 0.8) +
+  scale_fill_manual(values = c("Female" = "#ec4899", "Male" = "#0284c7")) +
+  scale_y_continuous(labels = comma) +
+  scale_x_continuous(breaks = seq(1930, 2020, by = 10)) +
+  labs(
+    title = "Annual 'Braden' Births by Year (1924–2023)",
+    x = "Year",
+    y = "Total Births",
+    fill = "Sex"
+  ) +
+  theme_minimal(base_size = 12)
+
+ggplotly(p2, tooltip = "text") |>
+  layout(xaxis = list(tickformat = "d"))
+```
+
+```{r}
+#| label: scatter-braden
+#| message: false
+p3 <- ggplot(braden, aes(
+    x = year,
+    y = count,
+    color = sex_label,
+    size = count,
+    text = paste0(
+      "<b>Year:</b> ", year, "<br>",
+      "<b>Sex:</b> ", sex_label, "<br>",
+      "<b>Births:</b> ", comma(count)
+    )
+  )) +
+  geom_point(alpha = 0.7) +
+  scale_color_manual(values = c("Female" = "#ec4899", "Male" = "#0284c7")) +
+  scale_size_continuous(range = c(1.5, 6), labels = comma) +
+  scale_y_continuous(labels = comma) +
+  scale_x_continuous(breaks = seq(1930, 2020, by = 10)) +
+  labs(
+    title = "Annual 'Braden' Births Scatterplot (1924–2023)",
+    x = "Year",
+    y = "Total Births",
+    color = "Sex",
+    size = "Births"
+  ) +
+  theme_minimal(base_size = 12)
+
+ggplotly(p3, tooltip = "text") |>
+  layout(xaxis = list(tickformat = "d"))
 ```
